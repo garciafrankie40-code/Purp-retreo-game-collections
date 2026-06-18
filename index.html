@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Purp Retro Game Collections</title>
+<title>Purp Retro Arcade</title>
 
 <style>
 body {
   margin:0;
-  font-family: Arial;
+  font-family:Arial;
   background:#0b0b0f;
   color:white;
   text-align:center;
@@ -19,65 +19,20 @@ header {
   padding:15px;
 }
 
-.menu button {
+button {
   margin:5px;
   padding:10px;
-  background:#6a0dad;
-  color:white;
   border:none;
   border-radius:8px;
+  background:#6a0dad;
+  color:white;
   cursor:pointer;
 }
 
-.game {
-  display:none;
-  padding:20px;
-}
-
-/* generic box */
-.box {
-  width:20px;
-  height:20px;
-  background:lime;
-  position:absolute;
-}
-
-/* snake board */
-#snakeBoard {
-  width:300px;
-  height:300px;
-  margin:20px auto;
+canvas {
   background:#111;
-  position:relative;
+  margin-top:20px;
   border:2px solid #6a0dad;
-}
-
-/* breakout */
-#brickArea {
-  width:300px;
-  height:300px;
-  margin:auto;
-  background:#111;
-  position:relative;
-  border:2px solid #6a0dad;
-}
-
-/* memory grid */
-.grid {
-  display:grid;
-  grid-template-columns:repeat(4,60px);
-  justify-content:center;
-  gap:5px;
-}
-.card {
-  width:60px;
-  height:60px;
-  background:#333;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
-  cursor:pointer;
 }
 </style>
 </head>
@@ -86,146 +41,109 @@ header {
 
 <header>
 <h1>🟣 Purp Retro Arcade</h1>
-<p>Classic retro games in one site</p>
+<p>Fully playable mini games</p>
 </header>
 
-<div class="menu">
-<button onclick="show('snake')">Snake</button>
-<button onclick="show('breakout')">Breakout</button>
-<button onclick="show('reaction')">Reaction</button>
-<button onclick="show('dodge')">Dodge</button>
-<button onclick="show('memory')">Memory</button>
-</div>
+<button onclick="startSnake()">Snake</button>
+<button onclick="startDodge()">Dodge</button>
 
-<!-- SNAKE -->
-<div id="snake" class="game">
-<h2>🐍 Snake</h2>
-<div id="snakeBoard"></div>
-<p>Use arrow keys</p>
-</div>
-
-<!-- BREAKOUT -->
-<div id="breakout" class="game">
-<h2>🧱 Breakout</h2>
-<div id="brickArea"></div>
-</div>
-
-<!-- REACTION -->
-<div id="reaction" class="game">
-<h2>⚡ Reaction Test</h2>
-<p id="reactText">Wait for green...</p>
-<button onclick="reactClick()">CLICK!</button>
-</div>
-
-<!-- DODGE -->
-<div id="dodge" class="game">
-<h2>⚡ Dodge Game</h2>
-<p>Press left/right arrows</p>
-<div id="dodgeBox" class="box"></div>
-</div>
-
-<!-- MEMORY -->
-<div id="memory" class="game">
-<h2>🧠 Memory Flip</h2>
-<div class="grid" id="grid"></div>
-</div>
+<canvas id="game" width="300" height="300"></canvas>
 
 <script>
 
-/* MENU */
-function show(id){
-  document.querySelectorAll('.game').forEach(g=>g.style.display='none');
-  document.getElementById(id).style.display='block';
-}
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let mode = "";
+let snake, dir, food, dodgeX;
 
 /* ---------------- SNAKE ---------------- */
-let board = document.getElementById("snakeBoard");
-let snake = [{x:5,y:5}];
-let dir = "right";
-
-document.addEventListener("keydown", e=>{
-  if(e.key==="ArrowUp")dir="up";
-  if(e.key==="ArrowDown")dir="down";
-  if(e.key==="ArrowLeft")dir="left";
-  if(e.key==="ArrowRight")dir="right";
-});
-
-function drawSnake(){
-  board.innerHTML="";
-  snake.forEach(s=>{
-    let div=document.createElement("div");
-    div.className="box";
-    div.style.left=s.x*20+"px";
-    div.style.top=s.y*20+"px";
-    board.appendChild(div);
-  });
+function startSnake(){
+  mode="snake";
+  snake=[{x:5,y:5}];
+  dir="right";
+  food={x:10,y:10};
 }
 
-function moveSnake(){
-  let head = {...snake[0]};
+document.addEventListener("keydown",e=>{
+  if(mode==="snake"){
+    if(e.key==="ArrowUp")dir="up";
+    if(e.key==="ArrowDown")dir="down";
+    if(e.key==="ArrowLeft")dir="left";
+    if(e.key==="ArrowRight")dir="right";
+  }
+});
+
+function snakeGame(){
+  let head={...snake[0]};
+
   if(dir==="right")head.x++;
   if(dir==="left")head.x--;
   if(dir==="up")head.y--;
   if(dir==="down")head.y++;
 
+  if(head.x===food.x && head.y===food.y){
+    food={x:Math.floor(Math.random()*15),y:Math.floor(Math.random()*15)};
+  } else {
+    snake.pop();
+  }
+
   snake.unshift(head);
-  snake.pop();
-  drawSnake();
-}
-setInterval(moveSnake,200);
 
-/* ---------------- REACTION ---------------- */
-let canClick=false;
-setTimeout(()=>{
-  document.getElementById("reactText").innerText="CLICK NOW!";
-  canClick=true;
-}, Math.random()*5000);
+  ctx.fillStyle="#111";
+  ctx.fillRect(0,0,300,300);
 
-function reactClick(){
-  alert(canClick ? "FAST!" : "Too early!");
-  location.reload();
+  ctx.fillStyle="red";
+  ctx.fillRect(food.x*20,food.y*20,20,20);
+
+  ctx.fillStyle="lime";
+  snake.forEach(s=>{
+    ctx.fillRect(s.x*20,s.y*20,20,20);
+  });
 }
 
 /* ---------------- DODGE ---------------- */
-let dodge=document.getElementById("dodgeBox");
-let x=150;
+function startDodge(){
+  mode="dodge";
+  dodgeX=150;
+}
 
 document.addEventListener("keydown",e=>{
-  if(document.getElementById("dodge").style.display==="block"){
-    if(e.key==="ArrowLeft")x-=10;
-    if(e.key==="ArrowRight")x+=10;
-    dodge.style.left=x+"px";
+  if(mode==="dodge"){
+    if(e.key==="ArrowLeft")dodgeX-=10;
+    if(e.key==="ArrowRight")dodgeX+=10;
   }
 });
 
-/* ---------------- MEMORY ---------------- */
-let values=["A","B","C","D","A","B","C","D"];
-values.sort(()=>0.5-Math.random());
+let fallY=0;
 
-let grid=document.getElementById("grid");
-let first=null;
+function dodgeGame(){
+  ctx.fillStyle="#111";
+  ctx.fillRect(0,0,300,300);
 
-values.forEach(v=>{
-  let c=document.createElement("div");
-  c.className="card";
-  c.dataset.val=v;
-  c.innerText="?";
-  c.onclick=()=>{
-    c.innerText=v;
-    if(!first){
-      first=c;
-    } else {
-      if(first.dataset.val!==v){
-        setTimeout(()=>{
-          first.innerText="?";
-          c.innerText="?";
-        },500);
-      }
-      first=null;
-    }
-  };
-  grid.appendChild(c);
-});
+  ctx.fillStyle="red";
+  ctx.fillRect(150,fallY,20,20);
+
+  ctx.fillStyle="lime";
+  ctx.fillRect(dodgeX,280,40,10);
+
+  fallY+=5;
+  if(fallY>300) fallY=0;
+
+  if(fallY>270 && dodgeX===150){
+    alert("Game Over!");
+    fallY=0;
+  }
+}
+
+/* ---------------- LOOP ---------------- */
+function loop(){
+  if(mode==="snake") snakeGame();
+  if(mode==="dodge") dodgeGame();
+  requestAnimationFrame(loop);
+}
+
+loop();
 
 </script>
 
